@@ -1,0 +1,5 @@
+---
+- name: generate prometheus deployment
+  hosts: OSEv3
+  roles:
+  - openshift_prometheus
