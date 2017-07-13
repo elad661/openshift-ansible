@@ -1,0 +1,64 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: {{obj_name}}
+  name: {{obj_name}}
+  namespace: {{ namespace }}
+spec:
+  replicas: {{ replicas }}
+  selector:
+    matchLabels:
+      app: {{obj_name}}
+  template:
+    metadata:
+      labels:
+        app: {{obj_name}}
+      name: {{obj_name}}
+    spec:
+      serviceAccountName: {{service_account_name}}
+      containers:
+{% for container in containers %}
+      - name: {{ container.name }}
+        image: {{ container.image }}
+        imagePullPolicy: IfNotPresent
+{% if container.ports is defined%}
+        ports:
+{% for port in container.ports %}
+        - containerPort: {{port.containerPort}}
+          name: {{port.name}}
+{% endfor %}
+{% endif %}
+{% if container.args is defined%}
+        args:
+{% for arg in container.args %}
+        - '{{arg}}'
+{% endfor %}
+{% endif %}
+{% if container.mounts is defined%}
+        volumeMounts:
+{% for mount in container.mounts %}
+        - mountPath: {{mount.path}}
+          name: {{mount.name}}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+      restartPolicy: Always
+
+      volumes:
+{% for volume in volumes %}
+        - name: {{volume.name}}
+{% if volume.configMap is defined%}
+          configMap:
+            defaultMode: {{volume.configMap.defaultMode}}
+            name: {{volume.configMap.name}}
+{% endif %}
+{% if volume.secret is defined%}
+          secret:
+            secretName: {{volume.secret.secretName}}
+{% endif %}
+{% if volume.emptyDir is defined%}
+          emptyDir: {}
+{% endif %}
+{% endfor %}

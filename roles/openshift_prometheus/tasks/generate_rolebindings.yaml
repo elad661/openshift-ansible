@@ -1,0 +1,15 @@
+---
+- name: generate view role binding for the prometheus service account
+  template:
+    src: rolebinding.j2
+    dest: "{{ mktemp.stdout }}/templates/prometheus-rolebinding.yaml"
+  vars:
+    obj_name: prometheus-cluster-reader
+    cluster: yes
+    roleRef:
+      name: cluster-reader
+    subjects:
+    - kind: ServiceAccount
+      name: prometheus
+      namespace: "{{ openshift_prometheus_namespace }}"
+  changed_when: no

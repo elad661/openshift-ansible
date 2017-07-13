@@ -1,0 +1,39 @@
+---
+
+- name: Add prometheus project
+  oc_project:
+    state: present
+    name: "{{ openshift_prometheus_namespace }}"
+    description: Prometheus
+
+- name: Install Prometheus
+  include: "{{ role_path }}/tasks/install_{{ include_file }}.yaml"
+  with_items:
+    - support
+    - prometheus_core
+    - prometheus_alerts
+  loop_control:
+    loop_var: include_file
+
+- find:
+    paths: "{{ mktemp.stdout }}/templates"
+    patterns: ".*.yaml"
+    use_regex: true
+  register: object_def_files
+  changed_when: no
+
+- slurp:
+    src: "{{item.path}}"
+  register: object_defs
+  with_items: "{{object_def_files.files}}"
+  changed_when: no
+
+- name: Create objects
+  include: oc_apply.yaml
+  vars:
+    kubeconfig: "{{ mktemp.stdout }}/admin.kubeconfig"
+    namespace: "{{ openshift_prometheus_namespace }}"
+    file_name: "{{ item.source }}"
+    file_content: "{{ item.content | b64decode | from_yaml }}"
+  with_items: "{{ object_defs.results }}"
+
