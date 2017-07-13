@@ -1,0 +1,18 @@
+---
+- name: generate the prometheus and alerts routes
+  template:
+    src: route.j2
+    dest: "{{ mktemp.stdout }}/templates/{{obj_name}}-route.yaml"
+  vars:
+    obj_name: "{{item}}"
+    name: "{{obj_name}}"
+    to:
+      kind: Service
+      name: "{{obj_name}}"
+      namespace: "{{openshift_prometheus_namespace}}"
+    tls:
+      termination: reencrypt
+  with_items:
+    - prometheus
+    - alerts
+  changed_when: no
