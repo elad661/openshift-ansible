@@ -1,0 +1,7 @@
+---
+- name: Generate configmap for prometheus deployment
+  template: src=prometheus_cm.j2 dest={{mktemp.stdout}}/templates/{{obj_name}}-cfgmap.yaml
+  vars:
+    obj_name: prometheus
+    namespace: "{{ openshift_prometheus_namespace }}"
+  changed_when: no

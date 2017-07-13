@@ -1,4 +1,3 @@
 ---
 # vars file for openshift_prometheus
-openshift_prometheus_namespace: prometheus
 prometheus_template_path: "/tmp/prometheus.yaml"

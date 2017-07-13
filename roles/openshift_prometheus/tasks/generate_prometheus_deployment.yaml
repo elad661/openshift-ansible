@@ -1,0 +1,61 @@
+---
+- name: Generate deployment for prometheus behind oauth-proxy
+  template: src=deployment.j2 dest={{mktemp.stdout}}/templates/{{obj_name}}-deployment.yaml
+  vars:
+    obj_name: prometheus
+    namespace: "{{ openshift_prometheus_namespace }}"
+    replicas: 1
+    service_account_name: prometheus
+    containers:
+    - name: oauth-proxy
+      image: "{{ openshift_prometheus_image_proxy }}"
+      ports:
+      - containerPort: 8443
+        name: web
+      args:
+      - -https-address=:8443
+      - -email-domain=*
+      - -client-id=system:serviceaccount:{{ openshift_prometheus_namespace }}:prometheus
+      - -upstream=http://localhost:9090
+      - -provider=openshift
+      - -redirect-url=https:///oauth2/callback
+      - '-openshift-sar={"namespace": "{{ openshift_prometheus_namespace }}", "verb": "list", "resource": "services"}'
+      - -tls-cert=/etc/tls/private/tls.crt
+      - -tls-key=/etc/tls/private/tls.key
+      - -client-secret-file=/var/run/secrets/kubernetes.io/serviceaccount/token
+      - -cookie-secret-file=/etc/proxy/secrets/session_secret
+      - -skip-auth-regex=^/metrics
+      - '-openshift-delegate-urls={"/": {"resource": "namespaces", "verb": "get", "name": "{{ openshift_prometheus_namespace }}" }}'
+      mounts:
+      - path: /etc/tls/private
+        name: prometheus-tls
+      - path: /etc/proxy/secrets
+        name: secrets
+
+    - name: prometheus
+      args:
+      - --storage.tsdb.retention=6h
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.listen-address=localhost:9090
+      image: "{{ openshift_prometheus_image_prometheus }}"
+      mounts:
+      - path: /etc/prometheus
+        name: config-volume
+      - path: /prometheus
+        name: data-volume
+
+    volumes:
+    - configMap:
+        defaultMode: 420
+        name: prometheus
+      name: config-volume
+    - name: secrets
+      secret:
+        secretName: prometheus-proxy
+    - name: prometheus-tls
+      secret:
+        secretName: prometheus-tls
+    - emptyDir: {}
+      name: data-volume
+  changed_when: no
+
