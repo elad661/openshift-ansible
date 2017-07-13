@@ -1,0 +1,9 @@
+---
+
+- name: Generate alerts deployment and configMap
+  include: "{{ role_path }}/tasks/generate_{{ include_file_alerts }}.yaml"
+  with_items:
+    - alerts_deployment
+    - alerts_configmap
+  loop_control:
+    loop_var: include_file_alerts
