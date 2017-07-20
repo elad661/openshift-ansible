@@ -5,28 +5,30 @@
   register: mktemp
   changed_when: False
 
-- name: Create temp directory for all our templates
-  file: path={{mktemp.stdout}}/templates state=directory mode=0755
-  changed_when: False
-  when: openshift_prometheus_install_prometheus | bool
+- set_fact:
+    tempdir: "{{ mktemp.stdout }}"
 
-- name: Create temp directory local on control node
-  local_action: command mktemp -d
-  register: local_tmp
+- name: Create templates subdirectory
+  file:
+    state: directory
+    path: "{{ tempdir }}/templates"
+    mode: 0755
   changed_when: False
-  become: false
 
+# not sure i need this
 - name: Copy the admin client config(s)
   command: >
-     cp {{ openshift.common.config_base}}/master/admin.kubeconfig {{ mktemp.stdout }}/admin.kubeconfig
+     cp {{ openshift.common.config_base}}/master/admin.kubeconfig {{ tempdir }}/admin.kubeconfig
   changed_when: False
   check_mode: no
   tags: prometheus_init
+  when: False
 
 - include: "{{ (openshift_prometheus_install_prometheus | bool) | ternary('install_prometheus.yaml','uninstall_prometheus.yaml') }}"
 
 - name: Delete temp directory
-  local_action: file path=local_tmp.stdout state=absent
-  tags: prometheus_cleanup
+  file:
+    name: "{{ tempdir }}"
+    state: absent
   changed_when: False
-  check_mode: no
+  when: False

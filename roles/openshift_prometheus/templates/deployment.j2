@@ -17,6 +17,12 @@ spec:
       name: {{obj_name}}
     spec:
       serviceAccountName: {{service_account_name}}
+{% if node_selector is iterable and node_selector | length > 0 %}
+      nodeSelector:
+{% for key, value in node_selector.iteritems() %}
+        {{key}}: "{{value}}"
+{% endfor %}
+{% endif %}
       containers:
 {% for container in containers %}
       - name: {{ container.name }}
