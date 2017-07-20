@@ -6,6 +6,7 @@
     namespace: "{{ openshift_prometheus_namespace }}"
     replicas: 1
     service_account_name: prometheus
+    node_selector: {{ openshift_prometheus_nodeselector }}
     containers:
     - name: oauth-proxy
       image: "{{ openshift_prometheus_image_proxy }}"

@@ -1,6 +1,7 @@
 ---
 - include: generate_secrets.yaml
 - include: generate_serviceaccounts.yaml
+
 - include: generate_rolebindings.yaml
 - include: generate_services.yaml
 - include: generate_routes.yaml

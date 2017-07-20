@@ -14,6 +14,146 @@
     - prometheus_alerts
   loop_control:
     loop_var: include_file
+  when: False
+
+#- include: generate_secrets.yaml
+- name: Set alert and prometheus secrets
+  oc_secret:
+    state: present
+    name: "{{ item }}-proxy"
+    namespace: "{{ openshift_prometheus_namespace }}"
+    contents:
+      - path: session_secret
+        data: "{{ 43 | oo_random_word }}="
+  with_items:
+    - prometheus
+    - alerts
+
+
+# create serviceaccount
+
+- name: create prometheus serviceaccount
+  oc_serviceaccount:
+    name: prometheus
+    namespace: "{{ openshift_prometheus_namespace }}"
+#    TODO add annotations when supproted
+#    annotations:
+#      serviceaccounts.openshift.io/oauth-redirectreference.primary: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"{{item.name}}"}}'
+    secrets:
+    - prometheus-secrets
+  changed_when: no
+
+# create clusterrolebinding for prometheus serviceaccount
+- name: Set cluster-reader permissions for prometheus
+  oc_adm_policy_user:
+    state: present
+    namespace: "{{ openshift_prometheus_namespace }}"
+    resource_kind: cluster-role
+    resource_name: cluster-reader
+    user: "system:serviceaccount:{{ openshift_prometheus_namespace }}:prometheus"
+
+# create prometheus and alerts services
+# TODO join into 1 task with loop
+- name: Create prometheus service
+  oc_service:
+    state: present
+    name: "{{ item.name }}"
+    namespace: "{{ openshift_prometheus_namespace }}"
+    selector:
+      app: prometheus
+    labels:
+      name: "{{ item.name }}"
+#    TODO add annotations when supported
+#    annotations:
+#      service.alpha.openshift.io/serving-cert-secret-name: "{{item.name}}-tls"
+    ports:
+    - port: 443
+      targetPort: 8443
+  with_items:
+    - name: "prometheus"
+
+- name: Create alerts service
+  oc_service:
+    state: present
+    name: "{{ item.name }}"
+    namespace: "{{ openshift_prometheus_namespace }}"
+    selector:
+      app: prometheus
+    labels:
+      name: "{{ item.name }}"
+#    TODO add annotations when supported
+#    annotations:
+#      service.alpha.openshift.io/serving-cert-secret-name: "{{item.name}}-tls"
+    ports:
+    - port: 443
+      targetPort: 9443
+  with_items:
+    - name: "alerts"
+
+# create prometheus and alerts routes
+- name: create prometheus and alerts routes
+  oc_route:
+    name: "{{ item.name }}"
+    namespace: "{{ openshift_prometheus_namespace }}"
+    service_name: "{{ item.name }}"
+    tls_termination: reencrypt
+  with_items:
+    - name: prometheus
+    - name: alerts
+
+
+# create prometheus deployment
+- name: Set prometheus deployment template
+  template:
+    src: prometheus_deployment.j2
+    dest: "{{ tempdir }}/templates/prometheus.yaml"
+  vars:
+    namespace: "{{ openshift_prometheus_namespace }}"
+    replicas: "{{ openshift_prometheus_replicas }}"
+
+- name: Set prometheus deployment
+  oc_obj:
+    state: present
+    name: "prometheus"
+    namespace: "{{ openshift_prometheus_namespace }}"
+    kind: deployment
+    files:
+    - "{{ tempdir }}/templates/prometheus.yaml"
+    delete_after: true
+
+# prometheus configmap
+- template:
+    src: prometheus.yml.j2
+    dest: "{{ tempdir }}/prometheus.yml"
+  changed_when: no
+
+- template:
+    src: prometheus.rules.j2
+    dest: "{{ tempdir }}/prometheus.rules"
+  changed_when: no
+
+- name: Set prometheus configmap
+  oc_configmap:
+    state: present
+    name: "prometheus"
+    namespace: "{{ openshift_prometheus_namespace }}"
+    from_file:
+      prometheus.rules: "{{ tempdir }}/prometheus.rules"
+      prometheus.yml: "{{ tempdir }}/prometheus.yml"
+
+# alertmanager configmap
+- template:
+    src: alertmanager.yml.j2
+    dest: "{{ tempdir }}/alertmanager.yml"
+  changed_when: no
+
+- name: Set alertmanager configmap
+  oc_configmap:
+    state: present
+    name: "alertmanager"
+    namespace: "{{ openshift_prometheus_namespace }}"
+    from_file:
+      alertmanager.yml: "{{ tempdir }}/alertmanager.yml"
 
 - find:
     paths: "{{ mktemp.stdout }}/templates"
@@ -21,12 +161,14 @@
     use_regex: true
   register: object_def_files
   changed_when: no
+  when: False
 
 - slurp:
     src: "{{item.path}}"
   register: object_defs
   with_items: "{{object_def_files.files}}"
   changed_when: no
+  when: False
 
 - name: Create objects
   include: oc_apply.yaml
@@ -36,4 +178,4 @@
     file_name: "{{ item.source }}"
     file_content: "{{ item.content | b64decode | from_yaml }}"
   with_items: "{{ object_defs.results }}"
-
+  when: False
