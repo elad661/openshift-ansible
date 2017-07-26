@@ -5,4 +5,6 @@
   - openshift_prometheus
   vars:
     openshift_prometheus_state: present
+    # support kubernetes < 1.7
+    openshift_prometheus_use_default_metrics_path: True
 
