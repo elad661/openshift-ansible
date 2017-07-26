@@ -1,3 +1,2 @@
 ---
 # vars file for openshift_prometheus
-prometheus_template_path: "/tmp/prometheus.yaml"

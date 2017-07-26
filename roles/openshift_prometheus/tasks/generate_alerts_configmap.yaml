@@ -1,7 +1,0 @@
----
-- name: Generate configmap for alerts deployment
-  template: src=alertmanager_cm.j2 dest={{mktemp.stdout}}/templates/{{obj_name}}-cfgmap.yaml
-  vars:
-    obj_name: alertmanager
-    namespace: "{{ openshift_prometheus_namespace }}"
-  changed_when: no

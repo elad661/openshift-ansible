@@ -1,25 +1,16 @@
 ---
 
+# namespace
 - name: Add prometheus project
   oc_project:
-    state: present
+    state: "{{ state }}"
     name: "{{ openshift_prometheus_namespace }}"
     description: Prometheus
 
-- name: Install Prometheus
-  include: "{{ role_path }}/tasks/install_{{ include_file }}.yaml"
-  with_items:
-    - support
-    - prometheus_core
-    - prometheus_alerts
-  loop_control:
-    loop_var: include_file
-  when: False
-
-#- include: generate_secrets.yaml
+# secrets
 - name: Set alert and prometheus secrets
   oc_secret:
-    state: present
+    state: "{{ state }}"
     name: "{{ item }}-proxy"
     namespace: "{{ openshift_prometheus_namespace }}"
     contents:
@@ -29,11 +20,10 @@
     - prometheus
     - alerts
 
-
-# create serviceaccount
-
+# serviceaccount
 - name: create prometheus serviceaccount
   oc_serviceaccount:
+    state: "{{ state }}"
     name: prometheus
     namespace: "{{ openshift_prometheus_namespace }}"
 #    TODO add annotations when supproted
@@ -46,7 +36,7 @@
 # create clusterrolebinding for prometheus serviceaccount
 - name: Set cluster-reader permissions for prometheus
   oc_adm_policy_user:
-    state: present
+    state: "{{ state }}"
     namespace: "{{ openshift_prometheus_namespace }}"
     resource_kind: cluster-role
     resource_name: cluster-reader
@@ -56,7 +46,7 @@
 # TODO join into 1 task with loop
 - name: Create prometheus service
   oc_service:
-    state: present
+    state: "{{ state }}"
     name: "{{ item.name }}"
     namespace: "{{ openshift_prometheus_namespace }}"
     selector:
@@ -74,7 +64,7 @@
 
 - name: Create alerts service
   oc_service:
-    state: present
+    state: "{{ state }}"
     name: "{{ item.name }}"
     namespace: "{{ openshift_prometheus_namespace }}"
     selector:
@@ -93,6 +83,7 @@
 # create prometheus and alerts routes
 - name: create prometheus and alerts routes
   oc_route:
+    state: "{{ state }}"
     name: "{{ item.name }}"
     namespace: "{{ openshift_prometheus_namespace }}"
     service_name: "{{ item.name }}"
@@ -100,7 +91,6 @@
   with_items:
     - name: prometheus
     - name: alerts
-
 
 # create prometheus deployment
 - name: Set prometheus deployment template
@@ -113,7 +103,7 @@
 
 - name: Set prometheus deployment
   oc_obj:
-    state: present
+    state: "{{ state }}"
     name: "prometheus"
     namespace: "{{ openshift_prometheus_namespace }}"
     kind: deployment
@@ -134,7 +124,7 @@
 
 - name: Set prometheus configmap
   oc_configmap:
-    state: present
+    state: "{{ state }}"
     name: "prometheus"
     namespace: "{{ openshift_prometheus_namespace }}"
     from_file:
@@ -149,33 +139,8 @@
 
 - name: Set alertmanager configmap
   oc_configmap:
-    state: present
+    state: "{{ state }}"
     name: "alertmanager"
     namespace: "{{ openshift_prometheus_namespace }}"
     from_file:
       alertmanager.yml: "{{ tempdir }}/alertmanager.yml"
-
-- find:
-    paths: "{{ mktemp.stdout }}/templates"
-    patterns: ".*.yaml"
-    use_regex: true
-  register: object_def_files
-  changed_when: no
-  when: False
-
-- slurp:
-    src: "{{item.path}}"
-  register: object_defs
-  with_items: "{{object_def_files.files}}"
-  changed_when: no
-  when: False
-
-- name: Create objects
-  include: oc_apply.yaml
-  vars:
-    kubeconfig: "{{ mktemp.stdout }}/admin.kubeconfig"
-    namespace: "{{ openshift_prometheus_namespace }}"
-    file_name: "{{ item.source }}"
-    file_content: "{{ item.content | b64decode | from_yaml }}"
-  with_items: "{{ object_defs.results }}"
-  when: False

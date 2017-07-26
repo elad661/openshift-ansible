@@ -15,20 +15,12 @@
     mode: 0755
   changed_when: False
 
-# not sure i need this
-- name: Copy the admin client config(s)
-  command: >
-     cp {{ openshift.common.config_base}}/master/admin.kubeconfig {{ tempdir }}/admin.kubeconfig
-  changed_when: False
-  check_mode: no
-  tags: prometheus_init
-  when: False
-
-- include: "{{ (openshift_prometheus_install_prometheus | bool) | ternary('install_prometheus.yaml','uninstall_prometheus.yaml') }}"
+- include: install_prometheus.yaml
+  vars:
+    state: "{{ openshift_prometheus_state }}"
 
 - name: Delete temp directory
   file:
     name: "{{ tempdir }}"
     state: absent
   changed_when: False
-  when: False
