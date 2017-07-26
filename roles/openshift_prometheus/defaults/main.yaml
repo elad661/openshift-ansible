@@ -1,8 +1,7 @@
 ---
 # defaults file for openshift_prometheus
-openshift_prometheus_install_prometheus: True
+openshift_prometheus_state: present
 
-kubeconfig: "{{ openshift.common.config_base }}/master/openshift-master.kubeconfig"
 openshift_prometheus_namespace: prometheus
 
 openshift_prometheus_replicas: 1
