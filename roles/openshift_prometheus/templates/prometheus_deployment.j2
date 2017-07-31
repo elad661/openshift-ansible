@@ -207,7 +207,12 @@ spec:
         secret:
           secretName: prometheus-tls
       - name: prometheus-data
-        emptyDir: {}
+{% if openshift_prometheus_storage_type == 'pvc' %}
+        persistentVolumeClaim:
+          claimName: {{ openshift_prometheus_pvc_name }}
+{% else %}
+        emptydir: {}
+{% endif %}
       - name: alertmanager-config
         configMap:
           defaultMode: 420
@@ -219,6 +224,16 @@ spec:
         secret:
           secretName: alerts-tls
       - name: alertmanager-data
-        emptyDir: {}
-      - name: alert-buffer-data #TODO: make persistent
-        emptyDir: {}
+{% if openshift_prometheus_storage_type == 'pvc' %}
+        persistentVolumeClaim:
+          claimName: {{ openshift_prometheus_alertmanager_pvc_name }}
+{% else %}
+        emptydir: {}
+{% endif %}
+      - name: alert-buffer-data
+{% if openshift_prometheus_storage_type == 'pvc' %}
+        persistentVolumeClaim:
+          claimName: {{ openshift_prometheus_alert_buffer_pvc_name }}
+{% else %}
+        emptydir: {}
+{% endif %}
