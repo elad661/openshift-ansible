@@ -92,6 +92,28 @@
     - name: prometheus
     - name: alerts
 
+# Storage
+- name: create prometheus pvc
+  oc_pvc:
+    namespace: "{{ openshift_prometheus_namespace }}"
+    name: "{{ openshift_prometheus_pvc_name }}"
+    access_modes: "{{ openshift_prometheus_pvc_access_modes }}"
+    volume_capacity: "{{ openshift_prometheus_pvc_size }}"
+
+- name: create alertmanager pvc
+  oc_pvc:
+    namespace: "{{ openshift_prometheus_namespace }}"
+    name: "{{ openshift_prometheus_alertmanager_pvc_name }}"
+    access_modes: "{{ openshift_prometheus_alertmanager_pvc_access_modes }}"
+    volume_capacity: "{{ openshift_prometheus_alertmanager_pvc_size }}"
+
+- name: create alert-buffer pvc
+  oc_pvc:
+    namespace: "{{ openshift_prometheus_namespace }}"
+    name: "{{ openshift_prometheus_alert_buffer_pvc_name }}"
+    access_modes: "{{ openshift_prometheus_alert_buffer_pvc_access_modes }}"
+    volume_capacity: "{{ openshift_prometheus_alert_buffer_pvc_size }}"
+
 # create prometheus deployment
 - name: Set prometheus deployment template
   template:
