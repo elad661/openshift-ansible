@@ -1,6 +1,8 @@
 ---
-- name: generate prometheus deployment
-  hosts: masters
+- include: evaluate_groups.yml
+
+- name: OpenShift Prometheus
+  hosts: oo_first_master
   roles:
   - openshift_prometheus
   vars:
