@@ -1,5 +1,9 @@
 rule_files:
   - 'prometheus.rules'
+{% if openshift_prometheus_additional_rules_file is defined and openshift_prometheus_additional_rules_file is not none %}
+  - 'prometheus.additional.rules'
+{% endif %}
+
 
 
 # A scrape configuration for running Prometheus on a Kubernetes cluster.

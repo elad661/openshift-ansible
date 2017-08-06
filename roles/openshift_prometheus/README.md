@@ -1,17 +1,76 @@
 OpenShift Prometheus
 ====================
 
-Openshift Prometheus Installation
+OpenShift Prometheus Installation
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+For default values, see [`defaults/main.yaml`](defaults/main.yaml).
+
+- `openshift_prometheus_state`: present - install/update. absent - uninstall.
+
+- `openshift_prometheus_namespace`: project (i.e. namespace) where the components will be
+  deployed.
+
+- `openshift_prometheus_replicas`: The number of replicas for prometheus deployment.
+
+- `openshift_prometheus_node_selector`: Selector for the nodes prometheus will be deployed on.
+
+- `openshift_prometheus_image_<COMPONENT>`: specify image for the component 
+
+## Storage related variables
+Each prometheus component (prometheus, alertmanager, alert-buffer, oauth-proxy) can set pv claim by setting corresponding role variable:
+```
+openshift_prometheus_<COMPONENT>_storage_type: <VALUE>
+openshift_prometheus_<COMPONENT>_pvc_(name|size|access_modes): <VALUE>
+```
+e.g
+```
+openshift_prometheus_storage_type: pvc
+openshift_prometheus_alertmanager_pvc_name: alertmanager
+openshift_prometheus_alert_buffer_pvc_size: 10G
+openshift_prometheus_pvc_access_modes: [ReadWriteOnce]
+```
+
+## Additional Alert Rules file variable
+An external file with alert rules can be added by setting path to additional rules variable: 
+```
+openshift_prometheus_additional_rules_file: <PATH> 
+```
+
+File content should be in prometheus alert rules format.
+Following example sets rule to fire an alert when one of the cluster nodes is down:
+
+```
+groups:
+- name: example-rules
+  interval: 30s # defaults to global interval
+  rules:
+  - alert: Node Down
+    expr: up{job="kubernetes-nodes"} == 0
+    annotations:
+      miqTarget: "ContainerNode"
+      severity: "HIGH"
+      message: "{{ '{{' }}{{ '$labels.instance' }}{{ '}}' }} is down"
+```
+
+
+## Additional variables to control resource limits
+Each prometheus component (prometheus, alertmanager, alert-buffer, oauth-proxy) can specify a cpu and memory limits and requests by setting
+the corresponding role variable:
+```
+openshift_prometheus_<COMPONENT>_(limits|requests)_(memory|cpu): <VALUE>
+```
+e.g
+```
+openshift_prometheus_alertmanager_limits_memory: 1Gi
+openshift_prometheus_oath_proxy_requests_cpu: 100
+```
 
 Dependencies
 ------------
@@ -22,18 +81,15 @@ openshift_facts
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+```
+- name: Configure openshift-prometheus
+  hosts: oo_first_master
+  roles:
+  - role: openshift_prometheus
+```
 
 License
 -------
 
 Apache License, Version 2.0
 
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).

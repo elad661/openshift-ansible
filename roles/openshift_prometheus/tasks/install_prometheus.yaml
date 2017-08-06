@@ -134,6 +134,20 @@
     delete_after: true
 
 # prometheus configmap
+# Copy the additional rules file if it is defined
+- name: Copy additional rules file to host
+  copy:
+    src: "{{ openshift_prometheus_additional_rules_file }}"
+    dest: "{{ tempdir }}/prometheus.additional.rules"
+  when:
+  - openshift_prometheus_additional_rules_file is defined
+  - openshift_prometheus_additional_rules_file is not none
+  - openshift_prometheus_additional_rules_file | trim | length > 0
+
+- stat:
+    path: "{{ tempdir }}/prometheus.additional.rules"
+  register: additional_rules_stat
+
 - template:
     src: prometheus.yml.j2
     dest: "{{ tempdir }}/prometheus.yml"
@@ -144,6 +158,18 @@
     dest: "{{ tempdir }}/prometheus.rules"
   changed_when: no
 
+# In prometheus configmap create "additional.rules" section if file exists
+- name: Set prometheus configmap
+  oc_configmap:
+    state: "{{ state }}"
+    name: "prometheus"
+    namespace: "{{ openshift_prometheus_namespace }}"
+    from_file:
+      prometheus.rules: "{{ tempdir }}/prometheus.rules"
+      prometheus.additional.rules: "{{ tempdir }}/prometheus.additional.rules"
+      prometheus.yml: "{{ tempdir }}/prometheus.yml"
+  when: additional_rules_stat.stat.exists == True
+
 - name: Set prometheus configmap
   oc_configmap:
     state: "{{ state }}"
@@ -152,6 +178,7 @@
     from_file:
       prometheus.rules: "{{ tempdir }}/prometheus.rules"
       prometheus.yml: "{{ tempdir }}/prometheus.yml"
+  when: additional_rules_stat.stat.exists == False
 
 # alertmanager configmap
 - template:
