@@ -148,6 +148,15 @@
     path: "{{ tempdir }}/prometheus.additional.rules"
   register: additional_rules_stat
 
+# The kubernetes version impacts the prometheus scraping endpoint
+# so gathering it before constructing the configmap
+- name: get oc version
+  oc_version:
+  register: oc_version
+
+- set_fact:
+    kubernetes_version: "{{ oc_version.results.kubernetes_short | float }}"
+
 - template:
     src: prometheus.yml.j2
     dest: "{{ tempdir }}/prometheus.yml"
@@ -193,3 +202,4 @@
     namespace: "{{ openshift_prometheus_namespace }}"
     from_file:
       alertmanager.yml: "{{ tempdir }}/alertmanager.yml"
+

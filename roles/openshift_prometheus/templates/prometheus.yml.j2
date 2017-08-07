@@ -68,8 +68,10 @@ scrape_configs:
     ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
   bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
 
-{% if openshift_prometheus_use_default_metrics_path is not defined %}
+{% if kubernetes_version | float() >= 1.7 | float() %}
   metrics_path: /metrics/cadvisor
+{% else %}}
+  metrics_path: /metrics
 {% endif %}
 
   kubernetes_sd_configs:
