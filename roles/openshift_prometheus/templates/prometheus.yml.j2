@@ -70,7 +70,7 @@ scrape_configs:
 
 {% if kubernetes_version | float() >= 1.7 | float() %}
   metrics_path: /metrics/cadvisor
-{% else %}}
+{% else %}
   metrics_path: /metrics
 {% endif %}
 

@@ -33,6 +33,13 @@
     - prometheus-secrets
   changed_when: no
 
+# TODO remove this when annotations are supported by oc_serviceaccount
+- name: annotate serviceaccount
+  command: >
+    {{ openshift.common.client_binary }} annotate --overwrite -n {{ openshift_prometheus_namespace }}
+    serviceaccount prometheus serviceaccounts.openshift.io/oauth-redirectreference.primary='{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"prometheus"}}'
+
+
 # create clusterrolebinding for prometheus serviceaccount
 - name: Set cluster-reader permissions for prometheus
   oc_adm_policy_user:
@@ -79,6 +86,17 @@
       targetPort: 9443
   with_items:
     - name: "alerts"
+
+
+# Annotate services with secret name
+# TODO remove this when annotations are supported by oc_service
+- name: annotate services
+  command: >
+    {{ openshift.common.client_binary }} annotate --overwrite -n {{ openshift_prometheus_namespace }}
+    service {{ item }} 'service.alpha.openshift.io/serving-cert-secret-name={{ item }}-tls'
+  with_items:
+    - prometheus
+    - alerts
 
 # create prometheus and alerts routes
 - name: create prometheus and alerts routes
