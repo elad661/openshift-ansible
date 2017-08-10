@@ -5,6 +5,7 @@
   oc_project:
     state: "{{ state }}"
     name: "{{ openshift_prometheus_namespace }}"
+    node_selector: "{{ openshift_prometheus_node_selector | replace(':','=') | replace('{', '') | replace('}', '') | replace(' ', '') | replace(\"u\'\", '') | replace(\"\'\", '') }}"
     description: Prometheus
 
 # secrets
@@ -220,4 +221,3 @@
     namespace: "{{ openshift_prometheus_namespace }}"
     from_file:
       alertmanager.yml: "{{ tempdir }}/alertmanager.yml"
-
