@@ -140,7 +140,7 @@
     dest: "{{ tempdir }}/templates/prometheus.yaml"
   vars:
     namespace: "{{ openshift_prometheus_namespace }}"
-    replicas: "{{ openshift_prometheus_replicas }}"
+    prom_replicas: "{{ openshift_prometheus_replicas }}"
 
 - name: Set prometheus deployment
   oc_obj:
