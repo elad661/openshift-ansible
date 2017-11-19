@@ -1,0 +1,6 @@
+---
+- name: OpenShift Hosted facts
+  hosts: oo_first_master
+  roles:
+  - openshift_hosted_facts
+
