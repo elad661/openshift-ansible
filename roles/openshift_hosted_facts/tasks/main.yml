@@ -17,3 +17,6 @@
     openshift_env_structures:
     - 'openshift.hosted.router.*'
   with_items: [hosted, logging, loggingops, metrics, prometheus]
+
+- name: Dump all vars
+  action: template src=templates/dumpall.j2 dest=/tmp/ansible.all
