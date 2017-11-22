@@ -161,6 +161,16 @@
         session_encryption_secrets: "{{ g_session_encryption_secrets }}"
     when: not g_session_secrets_present | bool
 
+- name: Debug hosted facts
+  hosts: oo_masters_to_config
+  vars:
+    prevhostvars: "{{ hostvars}}"
+    mergedvars: "{{ hostvars | oo_merge_hostvars(vars, inventory_hostname)}}"
+  tasks:
+  - debug: var=persistent_volumes
+
+  with_items: [hosted, logging, loggingops, metrics, prometheus]
+
 - name: Configure masters
   hosts: oo_masters_to_config
   any_errors_fatal: true

@@ -8,15 +8,6 @@
     openshift_hosted_registry_selector: "{{ openshift_registry_selector | default(openshift_hosted_infra_selector) }}"
   when: openshift_hosted_registry_selector is not defined and openshift_hosted_infra_selector is defined
 
-- name: Debug hosted facts
-  vars:
-    prevhostvars: "{{ hostvars}}"
-    mergedvars: "{{ hostvars | oo_merge_hostvars(vars, inventory_hostname)}}"
-  tasks:
-  - debug: var=persistent_volumes
-
-  with_items: [hosted, logging, loggingops, metrics, prometheus]
-
 - name: Set hosted facts
   openshift_facts:
     role: "{{ item }}"
