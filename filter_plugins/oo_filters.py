@@ -710,6 +710,33 @@ def oo_openshift_env(hostvars):
     return facts
 
 
+def oo_debug_nfs(hostvars, groups, component, subcomponent=None):
+    if not issubclass(type(hostvars), dict):
+        raise errors.AnsibleFilterError("|failed expects hostvars is a dict")
+    if not issubclass(type(groups), dict):
+        raise errors.AnsibleFilterError("|failed expects groups is a dict")
+
+    if component in hostvars['openshift']:
+        if subcomponent is not None:
+            storage_component = hostvars['openshift'][component][subcomponent]
+        else:
+            storage_component = hostvars['openshift'][component]
+
+        if 'storage' in storage_component:
+            params = storage_component['storage']
+            kind = params['kind']
+            if 'create_pv' in params:
+                create_pv = params['create_pv']
+                if kind is not None and create_pv:
+                    if kind == 'nfs':
+                        host = params['host']
+                        if host is None:
+                            if 'oo_nfs_to_config' in groups and len(groups['oo_nfs_to_config']) > 0:
+                                return groups['oo_nfs_to_config'][0]
+                            else:
+                                raise errors.AnsibleFilterError("|Host not detected! %s, %s, %s" % (component, subcomponent, storage_component))
+
+
 # pylint: disable=too-many-branches, too-many-nested-blocks, too-many-statements, too-many-locals
 def oo_component_persistent_volumes(hostvars, groups, component, subcomponent=None):
     """ Generate list of persistent volumes based on oo_openshift_env
@@ -1132,6 +1159,7 @@ class FilterModule(object):
     def filters(self):
         """ returns a mapping of filters to methods """
         return {
+            "oo_debug_nfs": oo_debug_nfs,
             "oo_select_keys": oo_select_keys,
             "oo_select_keys_from_list": oo_select_keys_from_list,
             "oo_chomp_commit_offset": oo_chomp_commit_offset,

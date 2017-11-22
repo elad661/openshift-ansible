@@ -1,0 +1,8 @@
+---
+- name: debug nfs host
+  hosts: oo_first_master
+  vars:
+    persistent_volumes: "{{ hostvars[groups.oo_first_master.0] | oo_debug_nfs(groups) }}"
+  tasks:
+  - debug: var=persistent_volumes
+  

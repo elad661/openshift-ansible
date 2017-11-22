@@ -9,6 +9,8 @@
         installer_phase_hosted: "In Progress"
       aggregate: false
 
+- include: debug_nfs_host.yml
+
 - include: create_persistent_volumes.yml
 
 - include: openshift_default_storage_class.yml

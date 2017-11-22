@@ -27,24 +27,42 @@
       checks:
       - docker_image_availability
 
+- include: debug_nfs_host.yml
+
 - include: ../openshift-etcd/config.yml
+
+- include: debug_nfs_host.yml
 
 - include: ../openshift-nfs/config.yml
   when: groups.oo_nfs_to_config | default([]) | count > 0
 
+- include: debug_nfs_host.yml
+
 - include: ../openshift-loadbalancer/config.yml
   when: groups.oo_lb_to_config | default([]) | count > 0
 
+- include: debug_nfs_host.yml
+
 - include: ../openshift-master/config.yml
+
+- include: debug_nfs_host.yml
 
 - include: ../openshift-master/additional_config.yml
 
+- include: debug_nfs_host.yml
+
 - include: ../openshift-node/config.yml
+
+- include: debug_nfs_host.yml
 
 - include: ../openshift-glusterfs/config.yml
   when: groups.oo_glusterfs_to_config | default([]) | count > 0
 
+- include: debug_nfs_host.yml
+
 - include: openshift_hosted.yml
+
+- include: debug_nfs_host.yml
 
 - include: openshift_metrics.yml
   when: openshift_metrics_install_metrics | default(false) | bool
