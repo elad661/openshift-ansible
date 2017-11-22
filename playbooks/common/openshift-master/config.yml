@@ -162,14 +162,13 @@
     when: not g_session_secrets_present | bool
 
 - name: Debug hosted facts
-  hosts: oo_masters_to_config
+  hosts: oo_first_master
   vars:
     prevhostvars: "{{ hostvars}}"
     mergedvars: "{{ hostvars | oo_merge_hostvars(vars, inventory_hostname)}}"
   tasks:
-  - debug: var=persistent_volumes
-
-  with_items: [hosted, logging, loggingops, metrics, prometheus]
+  - debug: var=prevhostvars
+  - debug: var=mergedvars
 
 - name: Configure masters
   hosts: oo_masters_to_config
