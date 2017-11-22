@@ -6,6 +6,7 @@
     facts: "{{ hostvars[inventory_hostname] }}"
     vars:
       openshift_metrics_storage_access_modes: openshift_hosted_metrics_storage_access_modes
+      openshift_metrics_storage_host: openshift_hosted_metrics_storage_host
       openshift_metrics_storage_nfs_directory: openshift_hosted_metrics_storage_nfs_directory
       openshift_metrics_storage_volume_name: openshift_hosted_metrics_storage_volume_name
       openshift_metrics_storage_volume_size: openshift_hosted_metrics_storage_volume_size
