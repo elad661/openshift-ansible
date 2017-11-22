@@ -710,11 +710,15 @@ def oo_openshift_env(hostvars):
     return facts
 
 
-def oo_debug_nfs(hostvars, groups, component, subcomponent=None):
+def oo_debug_nfs(hostvars, groups=None, component=None, subcomponent=None):
     if not issubclass(type(hostvars), dict):
         raise errors.AnsibleFilterError("|failed expects hostvars is a dict")
-    if not issubclass(type(groups), dict):
-        raise errors.AnsibleFilterError("|failed expects groups is a dict")
+
+    if groups is None:
+        groups = []
+
+    if component is None:
+        component = "metrics"
 
     if component in hostvars['openshift']:
         if subcomponent is not None:
