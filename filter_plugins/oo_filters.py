@@ -740,7 +740,7 @@ def oo_component_persistent_volumes(hostvars, groups, component, subcomponent=No
                             if 'oo_nfs_to_config' in groups and len(groups['oo_nfs_to_config']) > 0:
                                 host = groups['oo_nfs_to_config'][0]
                             else:
-                                raise errors.AnsibleFilterError("|failed no storage host detected")
+                                raise errors.AnsibleFilterError("|failed no storage host detected: %s, %s, %s", storage_component, component, subcomponent)
                         directory = params['nfs']['directory']
                         volume = params['volume']['name']
                         path = directory + '/' + volume
@@ -838,10 +838,10 @@ def oo_persistent_volumes(hostvars, groups, persistent_volumes=None):
         persistent_volume = oo_component_persistent_volumes(hostvars, groups, 'loggingops')
         if persistent_volume is not None:
             persistent_volumes.append(persistent_volume)
-    if 'metrics' in hostvars['openshift']:
-        persistent_volume = oo_component_persistent_volumes(hostvars, groups, 'metrics')
-        if persistent_volume is not None:
-            persistent_volumes.append(persistent_volume)
+    # if 'metrics' in hostvars['openshift']:
+    #    persistent_volume = oo_component_persistent_volumes(hostvars, groups, 'metrics')
+    #     if persistent_volume is not None:
+    #         persistent_volumes.append(persistent_volume)
     if 'prometheus' in hostvars['openshift']:
         persistent_volume = oo_component_persistent_volumes(hostvars, groups, 'prometheus')
         if persistent_volume is not None:
@@ -914,10 +914,10 @@ def oo_persistent_volume_claims(hostvars, persistent_volume_claims=None):
         persistent_volume_claim = oo_component_pv_claims(hostvars, 'loggingops')
         if persistent_volume_claim is not None:
             persistent_volume_claims.append(persistent_volume_claim)
-    if 'metrics' in hostvars['openshift']:
-        persistent_volume_claim = oo_component_pv_claims(hostvars, 'metrics')
-        if persistent_volume_claim is not None:
-            persistent_volume_claims.append(persistent_volume_claim)
+    # if 'metrics' in hostvars['openshift']:
+    #     persistent_volume_claim = oo_component_pv_claims(hostvars, 'metrics')
+    #     if persistent_volume_claim is not None:
+    #         persistent_volume_claims.append(persistent_volume_claim)
     if 'prometheus' in hostvars['openshift']:
         persistent_volume_claim = oo_component_pv_claims(hostvars, 'prometheus')
         if persistent_volume_claim is not None:
