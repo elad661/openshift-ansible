@@ -1,0 +1,25 @@
+global:
+  resolve_timeout: 5m
+route:
+  group_by: ['job']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'null'
+  routes:
+  - match:
+      alertname: DeadMansSwitch
+    receiver: 'null'
+  - match:
+      severity: critical
+    receiver: autoheal
+  - match:
+      severity: page
+    receiver: 'openshift-pagerduty'
+receivers:
+- name: 'null'
+- name: autoheal
+  webhook_configs:
+  - url: http://autoheal.openshift-monitoring.svc.cluster.local:9099
+- name: 'openshift-pagerduty'
+

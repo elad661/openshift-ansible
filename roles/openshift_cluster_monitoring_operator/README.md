@@ -8,9 +8,10 @@ Ansible 2.4
 
 # Role Variables
 
-| Name                                      | Default                |                  |
-|-------------------------------------------|------------------------|------------------|
-|                                           |                        |                  |
+| Name                                          | Default                |                  |
+|-----------------------------------------------|------------------------|------------------|
+| prometheus_operator_pagerduty_service_key     |                        |                  |
+| openshift_cluster_monitoring_enable_pagerduty |  false                 |                  |
 
 # Dependencies
 

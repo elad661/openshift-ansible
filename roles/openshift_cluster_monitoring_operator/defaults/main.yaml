@@ -1,1 +1,5 @@
 ---
+prometheus_operator_alertmanager_global:
+  resolve_timeout: 5m
+prometheus_operator_pagerduty_service_key: null
+openshift_cluster_monitoring_enable_pagerduty: false
